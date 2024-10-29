@@ -76,7 +76,11 @@ parentServer.use(vite.middlewares)
 
 The `InlineConfig` interface extends `UserConfig` with additional properties:
 
-- `configFile`: specify config file to use. If not set, Vite will try to automatically resolve one from project root. Set to `false` to disable auto resolving.
+- `configFile`: Specify config file to use. If not set, Vite will try to automatically resolve one from project root. Set to `false` to disable auto resolving.
+- `configFileNativeImport`: Whether to use native `import()` to import the config file. This is useful if the default behaviour of writing a temporary file to the filesystem is undesirable. However, you'll lose other features such as:
+  - TypeScript support if the runtime does not support it.
+  - Automatic server restarts if the files imported by the config (recursively) are updated.
+  - Cache busting of files imported by the config (recursively). A full manual restart is required.
 - `envFile`: Set to `false` to disable `.env` files.
 
 ## `ResolvedConfig`

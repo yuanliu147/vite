@@ -19,6 +19,7 @@ interface GlobalCLIOptions {
   '--'?: string[]
   c?: boolean | string
   config?: string
+  configNativeImport?: boolean
   base?: string
   l?: LogLevel
   logLevel?: LogLevel
@@ -83,6 +84,7 @@ function cleanGlobalCLIOptions<Options extends GlobalCLIOptions>(
   delete ret['--']
   delete ret.c
   delete ret.config
+  delete ret.configNativeImport
   delete ret.base
   delete ret.l
   delete ret.logLevel
@@ -180,6 +182,7 @@ cli
         base: options.base,
         mode: options.mode,
         configFile: options.config,
+        configFileNativeImport: options.configNativeImport,
         logLevel: options.logLevel,
         clearScreen: options.clearScreen,
         optimizeDeps: { force: options.force },
@@ -304,6 +307,7 @@ cli
           base: options.base,
           mode: options.mode,
           configFile: options.config,
+          configFileNativeImport: options.configNativeImport,
           logLevel: options.logLevel,
           clearScreen: options.clearScreen,
           build: buildOptions,
@@ -340,6 +344,7 @@ cli
             root,
             base: options.base,
             configFile: options.config,
+            configFileNativeImport: options.configNativeImport,
             logLevel: options.logLevel,
             mode: options.mode,
           },
@@ -382,6 +387,7 @@ cli
           root,
           base: options.base,
           configFile: options.config,
+          configFileNativeImport: options.configNativeImport,
           logLevel: options.logLevel,
           mode: options.mode,
           build: {

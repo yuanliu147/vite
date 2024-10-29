@@ -519,7 +519,22 @@ export interface ResolvedWorkerOptions {
 }
 
 export interface InlineConfig extends UserConfig {
+  /**
+   * Specify config file to use. If not set, Vite will try to automatically resolve one from project root.
+   * Set to false to disable auto resolving.
+   */
   configFile?: string | false
+  /**
+   * Whether to use native `import()` to import the config file. This is useful if the default behaviour of
+   * writing a temporary file to the filesystem is undesirable. However, you'll lose other features such as:
+   * - TypeScript support if the runtime does not support it.
+   * - Automatic server restarts if the files imported by the config (recursively) are updated.
+   * - Cache busting of files imported by the config (recursively). A full manual restart is required.
+   */
+  configFileNativeImport?: boolean
+  /**
+   * Set to false to disable .env files
+   */
   envFile?: false
 }
 
@@ -834,7 +849,10 @@ export async function resolveConfig(
 
   let { configFile } = config
   if (configFile !== false) {
-    const loadResult = await loadConfigFromFile(
+    const loadConfigFn = config.configFileNativeImport
+      ? loadConfigNative
+      : loadConfigFromFile
+    const loadResult = await loadConfigFn(
       configEnv,
       configFile,
       config.root,
@@ -1465,6 +1483,76 @@ export function sortUserPlugins(
   return [prePlugins, normalPlugins, postPlugins]
 }
 
+function searchConfigFile(root: string, configFile?: string) {
+  let resolvedPath: string | undefined
+
+  if (configFile) {
+    // explicit config path is always resolved from cwd
+    resolvedPath = path.resolve(configFile)
+  } else {
+    // implicit config file loaded from inline root (if present)
+    // otherwise from cwd
+    for (const filename of DEFAULT_CONFIG_FILES) {
+      const filePath = path.resolve(root, filename)
+      if (!fs.existsSync(filePath)) continue
+
+      resolvedPath = filePath
+      break
+    }
+  }
+
+  return resolvedPath
+}
+
+async function loadConfigNative(
+  configEnv: ConfigEnv,
+  configFile?: string,
+  configRoot: string = process.cwd(),
+  logLevel?: LogLevel,
+  customLogger?: Logger,
+): Promise<{
+  path: string
+  config: UserConfig
+  dependencies: string[]
+} | null> {
+  const start = debug ? performance.now() : 0
+  const getTime = () => `${(performance.now() - start).toFixed(2)}ms`
+
+  const resolvedPath = searchConfigFile(configRoot, configFile)
+  if (!resolvedPath) {
+    debug?.('no config file found.')
+    return null
+  }
+
+  try {
+    const result = await import(
+      pathToFileURL(resolvedPath).href + '?t=' + Date.now()
+    )
+    debug?.(`config file imported in ${getTime()}`)
+
+    const userConfig = result.default as UserConfigExport
+    const config = await (typeof userConfig === 'function'
+      ? userConfig(configEnv)
+      : userConfig)
+    if (!isObject(config)) {
+      throw new Error(`config must export or return an object.`)
+    }
+    return {
+      path: normalizePath(resolvedPath),
+      config,
+      dependencies: [],
+    }
+  } catch (e) {
+    createLogger(logLevel, { customLogger }).error(
+      colors.red(`failed to load config from ${resolvedPath}`),
+      {
+        error: e,
+      },
+    )
+    throw e
+  }
+}
+
 export async function loadConfigFromFile(
   configEnv: ConfigEnv,
   configFile?: string,
@@ -1476,26 +1564,10 @@ export async function loadConfigFromFile(
   config: UserConfig
   dependencies: string[]
 } | null> {
-  const start = performance.now()
+  const start = debug ? performance.now() : 0
   const getTime = () => `${(performance.now() - start).toFixed(2)}ms`
 
-  let resolvedPath: string | undefined
-
-  if (configFile) {
-    // explicit config path is always resolved from cwd
-    resolvedPath = path.resolve(configFile)
-  } else {
-    // implicit config file loaded from inline root (if present)
-    // otherwise from cwd
-    for (const filename of DEFAULT_CONFIG_FILES) {
-      const filePath = path.resolve(configRoot, filename)
-      if (!fs.existsSync(filePath)) continue
-
-      resolvedPath = filePath
-      break
-    }
-  }
-
+  const resolvedPath = searchConfigFile(configRoot, configFile)
   if (!resolvedPath) {
     debug?.('no config file found.')
     return null
