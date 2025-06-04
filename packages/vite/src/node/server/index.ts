@@ -424,6 +424,7 @@ export interface ResolvedServerUrls {
 export function createServer(
   inlineConfig: InlineConfig | ResolvedConfig = {},
 ): Promise<ViteDevServer> {
+  // 本地服务创建入口
   return _createServer(inlineConfig, { listen: true })
 }
 
@@ -495,6 +496,7 @@ export async function _createServer(
   const watcher = watchEnabled
     ? (chokidar.watch(
         // config file dependencies and env file might be outside of root
+        // 配置文件依赖项 和 环境文件 可能在根目录之外
         [
           root,
           ...config.configFileDependencies,
@@ -509,7 +511,6 @@ export async function _createServer(
     : createNoopWatcher(resolvedWatchOptions)
 
   const environments: Record<string, DevEnvironment> = {}
-
   for (const [name, environmentOptions] of Object.entries(
     config.environments,
   )) {
@@ -524,22 +525,25 @@ export async function _createServer(
 
   for (const environment of Object.values(environments)) {
     const previousInstance = options.previousEnvironments?.[environment.name]
+    // 创建插件容器，并标识已经初始化 _initiated
     await environment.init({ watcher, previousInstance })
   }
 
-  // Backward compatibility
-
+  // Backward compatibility  向后兼容性
   let moduleGraph = new ModuleGraph({
     client: () => environments.client.moduleGraph,
     ssr: () => environments.ssr.moduleGraph,
   })
+
+
+  // 模块图 moduleGraph 里的 _resolveId函数里有访问 this.pluginContainer 的逻辑
   const pluginContainer = createPluginContainer(environments)
 
   const closeHttpServer = createServerCloseFn(httpServer)
 
   const devHtmlTransformFn = createDevHtmlTransformFn(config)
 
-  // Promise used by `server.close()` to ensure `closeServer()` is only called once
+  // Promise used by `server.close()` to ensure `closeServer()` is only called once // 确保 closeServer() 只被调用一次
   let closeServerPromise: Promise<void> | undefined
   const closeServer = async () => {
     if (!middlewareMode) {
@@ -561,7 +565,71 @@ export async function _createServer(
     server._ssrCompatModuleRunner = undefined
   }
 
-  let server: ViteDevServer = {
+  let server: {
+    transformIndexHtml(url, html, originalUrl): Promise<string>;
+    _forceOptimizeOnRestart: boolean;
+    middlewares: Connect.Server;
+    environments: Record<string, DevEnvironment>;
+    _setInternalServer(_server: ViteDevServer): void;
+    ssrLoadModule(url, opts?: { fixStacktrace?: boolean }): Promise<SSRModule>;
+    ssrRewriteStacktrace(stack: string): string;
+    transformRequest(url, options): Promise<TransformResult | null>;
+    reloadModule(module): Promise<void>;
+    hot: WebSocketServer;
+    listen(port?: number, isRestart?: boolean): Promise<{
+      transformIndexHtml(url, html, originalUrl): Promise<string>;
+      _forceOptimizeOnRestart: boolean;
+      middlewares: Connect.Server;
+      environments: Record<string, DevEnvironment>;
+      _setInternalServer(_server: ViteDevServer): void;
+      ssrLoadModule(url, opts?: { fixStacktrace?: boolean }): Promise<SSRModule>;
+      ssrRewriteStacktrace(stack: string): string;
+      transformRequest(url, options): Promise<TransformResult | null>;
+      reloadModule(module): Promise<void>;
+      hot: WebSocketServer;
+      listen(port?: number, isRestart?: boolean): Promise<ViteDevServer>;
+      _shortcutsOptions: undefined;
+      ssrTransform(code: string, inMap: (SourceMap | {
+        mappings: ""
+      } | null), url: string, originalCode?: string): Promise<TransformResult | null>;
+      printUrls(): void;
+      ssrFixStacktrace(e): void;
+      _restartPromise: null;
+      ws: WebSocketServer;
+      resolvedUrls: null;
+      close(): Promise<void>;
+      watcher: FSWatcher;
+      restart(forceOptimize?: boolean): Promise<void>;
+      warmupRequest(url, options): Promise<any>;
+      httpServer: http.Server<any, any> | Http2SecureServer<any, any, any, any> | null;
+      waitForRequestsIdle(ignoredId?: string): Promise<void>;
+      pluginContainer: PluginContainer;
+      moduleGraph: ModuleGraph;
+      bindCLIShortcuts(options): void;
+      config: ResolvedConfig;
+      openBrowser(): void
+    }>;
+    _shortcutsOptions: undefined;
+    ssrTransform(code: string, inMap: (SourceMap | {
+      mappings: ""
+    } | null), url: string, originalCode?: string): Promise<TransformResult | null>;
+    printUrls(): void;
+    ssrFixStacktrace(e): void;
+    _restartPromise: null;
+    ws: WebSocketServer;
+    resolvedUrls: null;
+    close(): Promise<void>;
+    watcher: FSWatcher;
+    restart(forceOptimize?: boolean): Promise<null>;
+    warmupRequest(url, options): Promise<any>;
+    httpServer: null | http.Server<typeof IncomingMessage, typeof ServerResponse> | Http2SecureServer<typeof IncomingMessage, typeof ServerResponse, typeof Http2ServerRequest, typeof Http2ServerResponse>;
+    waitForRequestsIdle(ignoredId?: string): Promise<void>;
+    pluginContainer: PluginContainer;
+    moduleGraph: ModuleGraph;
+    bindCLIShortcuts(options): void;
+    config: ResolvedConfig;
+    openBrowser(): void
+  } = {
     config,
     middlewares,
     httpServer,
@@ -598,6 +666,7 @@ export async function _createServer(
     // The only param in options that could be important is `html`, but we may remove it as
     // that is part of the internal control flow for the vite dev server to be able to bail
     // out and do the html fallback
+    // environment.transformRequest和。warmupRequest现在不接受options参数，所以这里需要复制逻辑和错误处理。选项中唯一重要的参数是“html ”,但我们可以删除它，因为它是vite dev服务器的内部控制流的一部分，以便能够退出并执行html回退
     transformRequest(url, options) {
       warnFutureDeprecation(
         config,
@@ -655,6 +724,7 @@ export async function _createServer(
       }
     },
     async listen(port?: number, isRestart?: boolean) {
+      // 服务构建好了，还是监听端口
       await startServer(server, port)
       if (httpServer) {
         server.resolvedUrls = await resolveServerUrls(
@@ -827,6 +897,7 @@ export async function _createServer(
     await onHMRUpdate(isUnlink ? 'delete' : 'create', file)
   }
 
+  // 模块热更新：文件变化时触发
   watcher.on('change', async (file) => {
     file = normalizePath(file)
     reloadOnTsconfigChange(server, file)
@@ -858,7 +929,7 @@ export async function _createServer(
     { ...basePluginContextMeta, watchMode: true },
     config.logger,
   )
-  const postHooks: ((() => void) | void)[] = []
+  const postHooks: ((() => void) | void)[] = [] // TODO 这块干嘛的
   for (const hook of config.getSortedPluginHooks('configureServer')) {
     postHooks.push(await hook.call(configureServerContext, reflexServer))
   }
@@ -882,13 +953,14 @@ export async function _createServer(
   // host check (to prevent DNS rebinding attacks)
   const { allowedHosts } = serverConfig
   // no need to check for HTTPS as HTTPS is not vulnerable to DNS rebinding attacks
+  // 没有必要检查HTTPS，因为HTTPS不容易受到DNS重新绑定攻击
   if (allowedHosts !== true && !serverConfig.https) {
     middlewares.use(hostValidationMiddleware(allowedHosts, false))
   }
 
   middlewares.use(cachedTransformMiddleware(server))
 
-  // proxy
+  // proxy 本地服务代理中间件
   const { proxy } = serverConfig
   if (proxy) {
     const middlewareServer =
@@ -906,6 +978,7 @@ export async function _createServer(
 
   // ping request handler
   // Keep the named function. The name is visible in debug logs via `DEBUG=connect:dispatcher ...`
+  // 保留已命名的函数。通过“DEBUG=connect:dispatcher ”,可以在调试日志中看到该名称...`
   middlewares.use(function viteHMRPingMiddleware(req, res, next) {
     if (req.headers['accept'] === 'text/x-vite-ping') {
       res.writeHead(204).end()
@@ -917,11 +990,13 @@ export async function _createServer(
   // serve static files under /public
   // this applies before the transform middleware so that these files are served
   // as-is without transforms.
+  // 在/public下提供静态文件这适用于转换中间件之前，因此这些文件按原样提供，没有转换。
   if (publicDir) {
     middlewares.use(servePublicMiddleware(server, publicFiles))
   }
 
   // main transform middleware
+  // 主要的转换中间件
   middlewares.use(transformMiddleware(server))
 
   // serve static files
@@ -952,8 +1027,12 @@ export async function _createServer(
   // httpServer.listen can be called multiple times
   // when port when using next port number
   // this code is to avoid calling buildStart multiple times
+  // 使用下一个端口号时，可以多次调用httpServer.listen
+  // 这段代码是为了避免多次调用buildStart
   let initingServer: Promise<void> | undefined
   let serverInited = false
+
+  // 重写 httpServer 的 listen 方法
   const initServer = async (onListen: boolean) => {
     if (serverInited) return
     if (initingServer) return initingServer
@@ -962,6 +1041,8 @@ export async function _createServer(
       // For backward compatibility, we call buildStart for the client
       // environment when initing the server. For other environments
       // buildStart will be called when the first request is transformed
+      // 为了向后兼容，我们在初始化服务器时为客户机环境调用 buildStart。
+      // 对于其他环境，当第一个请求被转换时，将调用 buildStart
       await environments.client.pluginContainer.buildStart()
 
       // ensure ws server started
@@ -979,6 +1060,7 @@ export async function _createServer(
 
   if (!middlewareMode && httpServer) {
     // overwrite listen to init optimizer before server start
+    // 在服务器启动前，覆盖监听初始化优化程序
     const listen = httpServer.listen.bind(httpServer)
     httpServer.listen = (async (port: number, ...args: any[]) => {
       try {
@@ -1011,6 +1093,8 @@ async function startServer(
   // When using non strict port for the dev server, the running port can be different from the config one.
   // When restarting, the original port may be available but to avoid a switch of URL for the running
   // browser tabs, we enforce the previously used port, expect if the config port changed.
+  // 当对开发服务器使用非严格端口时，运行端口可以不同于配置端口。
+  // 重新启动时，原来的端口可能是可用的，但为了避免运行浏览器选项卡的URL切换，我们强制使用以前使用的端口，除非配置端口发生了变化。
   const port =
     (!configPort || configPort === server._configServerPort
       ? server._currentServerPort

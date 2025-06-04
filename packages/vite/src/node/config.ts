@@ -826,7 +826,7 @@ function resolveEnvironmentOptions(
       forceOptimizeDeps,
       consumer,
     ),
-    dev: resolveDevEnvironmentOptions(
+    dev: resolveDevEnvironmentOptions( // 解析 dev 环境配置
       options.dev,
       environmentName,
       consumer,
@@ -1112,18 +1112,18 @@ export async function resolveConfig(
   const userPlugins = [...prePlugins, ...normalPlugins, ...postPlugins]
   config = await runConfigHook(config, userPlugins, configEnv)
 
-  // Ensure default client and ssr environments
-  // If there are present, ensure order { client, ssr, ...custom }
+  // Ensure default client and ssr environments  确保默认客户端和ssr环境
+  // If there are present, ensure order { client, ssr, ...custom } 如果存在，确保顺序{客户端，ssr，...自定义}
   config.environments ??= {}
   if (
     !config.environments.ssr &&
     (!isBuild || config.ssr || config.build?.ssr)
   ) {
-    // During dev, the ssr environment is always available even if it isn't configure
-    // There is no perf hit, because the optimizer is initialized only if ssrLoadModule
+    // During dev, the ssr environment is always available even if it isn't configure // 在 dev 期间，即使没有配置 ssr 环境，ssr 环境也始终可用
+    // There is no perf hit, because the optimizer is initialized only if ssrLoadModule // 因为只有在 ssrLoadModule 被调用时，优化器才会被初始化
     // is called.
-    // During build, we only build the ssr environment if it is configured
-    // through the deprecated ssr top level options or if it is explicitly defined
+    // During build, we only build the ssr environment if it is configured // 在构建期间，只有在配置了 ssr 环境时，我们才会构建 ssr 环境
+    // through the deprecated ssr top level options or if it is explicitly defined // 通过废弃的 ssr 顶级选项或显式定义的 ssr 环境
     // in the environments config
     config.environments = { ssr: {}, ...config.environments }
   }
@@ -1193,6 +1193,8 @@ export async function resolveConfig(
     )
   }
 
+  console.log('config.dev', config.dev, config)
+
   // Merge default environment config values
   const defaultEnvironmentOptions = getDefaultEnvironmentOptions(config)
   // Some top level options only apply to the client environment
@@ -1239,6 +1241,8 @@ export async function resolveConfig(
   const resolvedDefaultResolve = resolveResolveOptions(config.resolve, logger)
 
   const resolvedEnvironments: Record<string, ResolvedEnvironmentOptions> = {}
+
+  // 解析各环境配置，dev, ssr
   for (const environmentName of Object.keys(config.environments)) {
     resolvedEnvironments[environmentName] = resolveEnvironmentOptions(
       config.environments[environmentName],

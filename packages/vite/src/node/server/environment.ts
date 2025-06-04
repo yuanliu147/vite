@@ -98,6 +98,7 @@ export class DevEnvironment extends BaseEnvironment {
     config: ResolvedConfig,
     context: DevEnvironmentContext,
   ) {
+    // dev 环境实际初始化
     let options = config.environments[name]
     if (!options) {
       throw new Error(`Environment "${name}" is not defined in the config.`)

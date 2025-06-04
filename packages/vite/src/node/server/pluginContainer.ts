@@ -136,6 +136,8 @@ export interface PluginContainerOptions {
  * Create a plugin container with a set of plugins. We pass them as a parameter
  * instead of using environment.plugins to allow the creation of different
  * pipelines working with the same environment (used for createIdResolver).
+ *
+ * 用一组插件创建一个插件容器。我们将它们作为参数传递，而不是使用environment.plugins，以允许创建与同一环境一起工作的不同管道(用于createIdResolver)。
  */
 export async function createEnvironmentPluginContainer<
   Env extends Environment = Environment,
@@ -253,6 +255,7 @@ class EnvironmentPluginContainer<Env extends Environment = Environment> {
   }
 
   // keeps track of hook promises so that we can wait for them all to finish upon closing the server
+  // 跟踪 hook promises，这样我们可以在关闭服务器时等待它们全部完成
   private handleHookPromise<T>(maybePromise: undefined | T | Promise<T>) {
     if (!(maybePromise as any)?.then) {
       return maybePromise
@@ -302,6 +305,7 @@ class EnvironmentPluginContainer<Env extends Environment = Environment> {
       // Don't throw here if closed, so buildEnd and closeBundle hooks can finish running
       if (condition && !condition(plugin)) continue
 
+      console.log(`plugin: ${plugin.name}, hookName: ${hookName}`)
       const hook = plugin[hookName]
       const handler: Function = getHookHandler(hook)
       if ((hook as { sequential?: boolean }).sequential) {
@@ -316,7 +320,7 @@ class EnvironmentPluginContainer<Env extends Environment = Environment> {
   }
 
   async buildStart(_options?: InputOptions): Promise<void> {
-    if (this._started) {
+    if (this._started) { // build 开始
       if (this._buildStartPromise) {
         await this._buildStartPromise
       }

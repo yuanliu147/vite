@@ -77,20 +77,6 @@
   "simple-git-hooks": {
     "pre-commit": "pnpm exec lint-staged --concurrent false"
   },
-  "lint-staged": {
-    "*": [
-      "prettier --write --cache --ignore-unknown"
-    ],
-    "packages/*/{src,types}/**/*.ts": [
-      "eslint --cache --fix"
-    ],
-    "packages/**/*.d.ts": [
-      "eslint --cache --fix"
-    ],
-    "playground/**/__tests__/**/*.ts": [
-      "eslint --cache --fix"
-    ]
-  },
   "packageManager": "pnpm@10.11.0",
   "pnpm": {
     "overrides": {

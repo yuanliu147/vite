@@ -17,6 +17,7 @@ const envConfig = defineConfig({
   input: path.resolve(__dirname, 'src/client/env.ts'),
   platform: 'browser',
   output: {
+    sourcemap: true,
     dir: path.resolve(__dirname, 'dist'),
     entryFileNames: 'client/env.mjs',
     target: 'es2020',
@@ -28,6 +29,7 @@ const clientConfig = defineConfig({
   platform: 'browser',
   external: ['@vite/env'],
   output: {
+    sourcemap: true,
     dir: path.resolve(__dirname, 'dist'),
     entryFileNames: 'client/client.mjs',
     target: 'es2020',
@@ -51,6 +53,7 @@ const sharedNodeOptions = defineConfig({
     // propertyReadSideEffects: false,
   },
   output: {
+    sourcemap: true,
     dir: './dist',
     entryFileNames: `node/[name].js`,
     chunkFileNames: 'node/chunks/dep-[hash].js',
@@ -80,6 +83,7 @@ const nodeConfig = defineConfig({
     },
   },
   output: {
+    sourcemap: true,
     ...sharedNodeOptions.output,
     // When polyfillRequire is enabled, `require` gets renamed by rolldown.
     // But the current usage of require() inside inlined workers expects `require`
@@ -160,6 +164,7 @@ const moduleRunnerConfig = defineConfig({
   ],
   plugins: [bundleSizeLimit(54)],
   output: {
+    sourcemap: true,
     ...sharedNodeOptions.output,
     minify: {
       compress: true,

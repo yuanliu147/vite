@@ -98,6 +98,8 @@ export function cachedTransformMiddleware(
         // For CSS requests, if the same CSS file is imported in a module,
         // the browser sends the request for the direct CSS request with the etag
         // from the imported CSS module. We ignore the etag in this case.
+        // 对于CSS请求，如果同一个CSS文件被导入到一个模块中，浏览器发送直接CSS请求的请求，带有来自导入的CSS模块的etag。
+        // 在这种情况下，我们忽略etag。
         const maybeMixedEtag = isCSSRequest(req.url!)
         if (!maybeMixedEtag) {
           debugCache?.(`[304] ${prettifyUrl(req.url!, server.config.root)}`)

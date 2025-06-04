@@ -233,6 +233,7 @@ export async function preview(
 
   // static assets
   const headers = config.preview.headers
+  // sirv 是干嘛的
   const viteAssetMiddleware = (...args: readonly [any, any?, any?]) =>
     sirv(distDir, {
       etag: true,

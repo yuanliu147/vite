@@ -11,6 +11,10 @@ import type {
  * It would be good to take the types names for the new EnvironmentModuleNode and EnvironmentModuleGraph but we can't
  * do that at this point without breaking to much code in the ecosystem.
  * We are going to deprecate these types and we can try to use them back in the future.
+ *
+ * 向后兼容的ModuleNode和ModuleGraph，具有来自客户端和ssr环境的混合节点。
+ * 最好为新的EnvironmentModuleNode和EnvironmentModuleGraph取类型名，但是如果不破坏生态系统中的大量代码，我们就不能这样做。
+ * 我们将不再使用这些类型，我们可以尝试在将来重新使用它们。
  */
 
 // same default value of "moduleInfo.meta" as in Rollup

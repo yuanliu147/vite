@@ -177,6 +177,10 @@ export interface Plugin<A = any> extends RollupPlugin<A> {
    * For backward-compatibility, the buildStart hook is called only once during
    * dev, for the client environment. Plugins can opt-in to be called
    * per-environment, aligning with the build hook behavior.
+   *
+   * 在开发期间，将这个插件加入到每个环境的buildStart和buildEnd中。
+   * 为了向后兼容，buildStart挂钩在开发过程中只为客户端环境调用一次。插件可以选择在每个环境中被调用，与构建挂钩行为保持一致。
+   *
    * @experimental
    */
   perEnvironmentStartEndDuringDev?: boolean
