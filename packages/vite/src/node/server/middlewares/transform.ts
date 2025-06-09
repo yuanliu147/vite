@@ -79,6 +79,8 @@ function deniedServingAccessForTransform(
 
 /**
  * A middleware that short-circuits the middleware chain to serve cached transformed modules
+ *
+ * 缩短中间件链, 以服务缓存的转换模块的中间件
  */
 export function cachedTransformMiddleware(
   server: ViteDevServer,
@@ -113,6 +115,7 @@ export function cachedTransformMiddleware(
   }
 }
 
+// 拦截对项目源文件的请求。
 export function transformMiddleware(
   server: ViteDevServer,
 ): Connect.NextHandleFunction {
