@@ -154,11 +154,13 @@ export function transformMiddleware(
     try {
       const isSourceMap = withoutQuery.endsWith('.map')
       // since we generate source map references, handle those requests here
+      // 因为我们生成源映射引用，所以在这里处理那些请求
       if (isSourceMap) {
         const depsOptimizer = environment.depsOptimizer
         if (depsOptimizer?.isOptimizedDepUrl(url)) {
           // If the browser is requesting a source map for an optimized dep, it
           // means that the dependency has already been pre-bundled and loaded
+          // 如果浏览器正在请求一个优化 dep 的源映射，这意味着依赖项已经被预先绑定和加载
           const sourcemapPath = url.startsWith(FS_PREFIX)
             ? fsPathFromId(url)
             : normalizePath(path.resolve(server.config.root, url.slice(1)))
