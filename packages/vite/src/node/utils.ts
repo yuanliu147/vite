@@ -304,6 +304,7 @@ export const virtualModulePrefix = 'virtual-module:'
 // NOTE: We should start relying on the "Sec-Fetch-Dest" header instead of this
 // hardcoded list. We can eventually remove this function when the minimum version
 // of browsers we support in dev all support this header.
+// 注意:我们应该开始依赖“Sec-Fetch-Dest”头，而不是这个硬编码列表。当我们在dev中支持的最低版本的浏览器都支持这个头时，我们最终可以删除这个功能。
 const knownJsSrcRE =
   /\.(?:[jt]sx?|m[jt]s|vue|marko|svelte|astro|imba|mdx)(?:$|\?)/
 export const isJSRequest = (url: string): boolean => {

@@ -485,6 +485,8 @@ class EnvironmentPluginContainer<Env extends Environment = Environment> {
     const ctx = new TransformPluginContext(this, id, code, inMap as SourceMap)
     ctx._addedImports = this._getAddedImports(id)
 
+    console.log('transform--plugins', this.getSortedPlugins('transform'))
+
     for (const plugin of this.getSortedPlugins('transform')) {
       if (this._closed && this.environment.config.dev.recoverable)
         throwClosedServerError()
