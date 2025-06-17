@@ -382,7 +382,7 @@ class EnvironmentPluginContainer<Env extends Environment = Environment> {
     const resolveStart = debugResolve ? performance.now() : 0
     let id: string | null = null
     const partial: Partial<PartialResolvedId> = {}
-    for (const plugin of this.getSortedPlugins('resolveId')) {
+    for (const plugin of this.getSortedPlugins('resolveId')) { // vite:resolve plugin 解析。
       if (this._closed && this.environment.config.dev.recoverable)
         throwClosedServerError()
       if (mergedSkip?.has(plugin)) continue

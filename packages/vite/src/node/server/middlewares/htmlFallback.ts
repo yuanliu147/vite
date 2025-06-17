@@ -33,6 +33,8 @@ export function htmlFallbackMiddleware(
 
     // .html files are not handled by serveStaticMiddleware
     // so we need to check if the file exists
+    // html文件不由 serveStaticMiddleware 处理
+    // 所以我们需要检查文件是否存在
     if (pathname.endsWith('.html')) {
       const filePath = path.join(root, pathname)
       if (fs.existsSync(filePath)) {
@@ -42,6 +44,7 @@ export function htmlFallbackMiddleware(
       }
     }
     // trailing slash should check for fallback index.html
+    // 尾随斜线应该检查回退index.html
     else if (pathname.endsWith('/')) {
       const filePath = path.join(root, pathname, 'index.html')
       if (fs.existsSync(filePath)) {

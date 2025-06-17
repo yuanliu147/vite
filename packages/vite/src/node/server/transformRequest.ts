@@ -105,8 +105,26 @@ export function transformRequest(
   //
   // We save the timestamp when we start processing and compare it with the
   // last time this module is invalidated
+
+  /*
+在我们处理此模块时，它可能会失效。例如，当发现缺失的dep时，在重新处理预捆绑的依赖关系之后需要整页重新加载时。我们保存当前时间，将其与上一次执行的失效进行比较，以了解我们是应该缓存转换的结果，还是应该将其作为陈旧的结果丢弃。
+
+模块可能由于以下原因而失效:
+1.由于预先捆绑了新发现的dep，因此需要完全重新加载
+2.配置更改后的完全重新加载
+3.生成模块的文件已更改
+4.虚拟模块的失效
+
+对于1和2，在失效后，作为浏览器重新加载页面的一部分，将发出对此模块的新请求。对于3和4，由于HMR处理，可能不会立即有新的请求。
+在所有情况下，下次请求该模块时，应该重新处理它。
+
+我们在开始处理时保存时间戳，并与该模块最后一次失效时进行比较
+  * */
+
   const timestamp = Date.now()
 
+  console.log('environment._pendingRequests----', environment._pendingRequests)
+  debugger
   const pending = environment._pendingRequests.get(cacheKey)
   if (pending) {
     return environment.moduleGraph
@@ -149,7 +167,7 @@ export function transformRequest(
   return request.finally(clearCache)
 }
 
-async function doTransform(
+async function doTransform( // 实际转换 /src/main.ts
   environment: DevEnvironment,
   url: string,
   options: TransformOptions,
@@ -175,10 +193,10 @@ async function doTransform(
     ? undefined
     : ((await pluginContainer.resolveId(url, undefined)) ?? undefined)
 
-  // resolve
+  // resolve => resolved.id 为模块的绝对路径，比如/src/main.ts, resolved.id === 'c://WorkSpace/xxx/xx/src/main.ts'
   const id = module?.id ?? resolved?.id ?? url
 
-  module ??= environment.moduleGraph.getModuleById(id)
+  module ??= environment.moduleGraph.getModuleById(id) // 初次都是 undefined
   if (module) {
     // if a different url maps to an existing loaded id,  make sure we relate this url to the id
     await environment.moduleGraph._ensureEntryFromUrl(url, undefined, resolved)
@@ -192,7 +210,7 @@ async function doTransform(
     if (cached) return cached
   }
 
-  const result = loadAndTransform(
+  const result = loadAndTransform( // 初次开始真正的加载转换
     environment,
     id,
     url,
@@ -238,7 +256,7 @@ async function getCachedTransformResult(
   }
 }
 
-async function loadAndTransform(
+async function loadAndTransform( //
   environment: DevEnvironment,
   id: string,
   url: string,

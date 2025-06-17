@@ -128,7 +128,6 @@ export function transformMiddleware(
 
   return async function viteTransformMiddleware(req, res, next) {
     const environment = server.environments.client
-
     if (req.method !== 'GET' || knownIgnoreList.has(req.url!)) {
       return next()
     }
