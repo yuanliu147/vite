@@ -342,7 +342,7 @@ export class EnvironmentModuleGraph {
   async _ensureEntryFromUrl(
     rawUrl: string,
     setIsSelfAccepting = true,
-    // Optimization, avoid resolving the same url twice if the caller already did it
+    // Optimization, avoid resolving the same url twice if the caller already did it 优化，避免解析同一个url两次，如果调用者已经这样做了
     resolved?: PartialResolvedId,
   ): Promise<EnvironmentModuleNode> {
     // Quick path, if we already have a module for this rawUrl (even without extension)

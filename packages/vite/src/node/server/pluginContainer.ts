@@ -492,7 +492,7 @@ class EnvironmentPluginContainer<Env extends Environment = Environment> {
       const filter = getCachedFilterForPlugin(plugin, 'transform')
       if (filter && !filter(id, code)) continue
 
-      ctx._updateActiveInfo(plugin, id, code)
+      ctx._updateActiveInfo(plugin, id, code) // 插件链处理的是上一个插件转换后的代码。
       const start = debugPluginTransform ? performance.now() : 0
       let result: TransformResult | string | undefined
       const handler = getHookHandler(plugin.transform)

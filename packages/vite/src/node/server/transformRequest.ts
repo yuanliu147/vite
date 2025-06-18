@@ -124,7 +124,6 @@ export function transformRequest(
   const timestamp = Date.now()
 
   console.log('environment._pendingRequests----', environment._pendingRequests)
-  debugger
   const pending = environment._pendingRequests.get(cacheKey)
   if (pending) {
     return environment.moduleGraph
@@ -367,10 +366,10 @@ async function loadAndTransform( //
   if (environment._closing && environment.config.dev.recoverable)
     throwClosedServerError()
 
-  // ensure module in graph after successful load
+  // ensure module in graph after successful load // 成功加载后，确保模块在模块图中
   mod ??= await moduleGraph._ensureEntryFromUrl(url, undefined, resolved)
 
-  // transform
+  // transform 开始转换
   const transformStart = debugTransform ? performance.now() : 0
   const transformResult = await pluginContainer.transform(code, id, {
     inMap: map,
