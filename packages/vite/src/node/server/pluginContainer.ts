@@ -505,6 +505,9 @@ class EnvironmentPluginContainer<Env extends Environment = Environment> {
       } catch (e) {
         ctx.error(e)
       }
+      console.log('------------------------------------------')
+      console.log('plugin.name', plugin.name, 'result', result)
+      console.log('------------------------------------------')
       if (!result) continue
       debugPluginTransform?.(
         timeFrom(start),

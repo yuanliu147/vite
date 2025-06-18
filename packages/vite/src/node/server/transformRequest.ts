@@ -420,6 +420,7 @@ async function loadAndTransform( //
           // Rewrite sources to relative paths to give debuggers the chance
           // to resolve and display them in a meaningful way (rather than
           // with absolute paths).
+          // 将源代码重写为相对路径，让调试器有机会以有意义的方式(而不是绝对路径)解析和显示它们。
           if (path.isAbsolute(sourcePath)) {
             modDirname ??= path.dirname(mod.file)
             normalizedMap.sources[sourcesIndex] = path.relative(
